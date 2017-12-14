@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
+#include <string.h>
 
 using namespace std;
 
@@ -13,6 +14,7 @@ int main(){
 	char string[100];
 	char c='p';
 	int status;
+	int size=0;
 	
 	if(pipe(fd1)<0){
 		printf("Can\'t create pipe\n");
@@ -34,19 +36,47 @@ int main(){
 			exit(-1);
 		}else if (result > 0){
 			if(c=='p'){
-				scanf("%s", string);	
-				write(fd1[1], string, 20);
+				while( (size = read(0, string, sizeof(string)-1)) > 0)
+				{
+					string[size] = '\0';
+					
+					write(fd1[1], string, size+1);
+					if(strcmp("end\n", string) == 0)
+						break;
+				}
+				//scanf("%s", string);	
+				//write(fd1[1], string, 20);
 			}else{
-				read(fd2[0], resstring, 20);
-                                printf("Parent: %s\n", resstring);
-                        }
+				while((size = read(fd2[0], resstring, sizeof(resstring)-1)) > 0)
+				{
+					if(strcmp("end\n", resstring) == 0)
+						break;
+					printf("Parent: %s", resstring);
+				}
+				//read(fd2[0], resstring, 20);
+                                //printf("Parent: %s\n", resstring);
+                }
 		}else{
 			if(c=='p'){
-				read(fd1[0], resstring, 20);
-				printf("Child: %s\n", resstring);
+				while((size = read(fd1[0], resstring, sizeof(resstring)-1)) > 0)
+				{
+					if(strcmp("end\n", resstring) == 0)
+						break;
+					printf("Child: %s", resstring);
+				}
+				//read(fd1[0], resstring, 20);
+				//printf("Child: %s\n", resstring);
 			}else{
-			        scanf("%s", string);
-                                write(fd2[1], string, 20);
+				while( (size = read(0, string, sizeof(string)-1)) > 0)
+				{
+					string[size] = '\0';
+					
+					write(fd2[1], string, size+1);
+					if(strcmp("end\n", string) == 0)
+						break;
+				}
+			    //scanf("%s", string);
+                //write(fd2[1], string, 20);
 			}
 			exit(0);
 		}
